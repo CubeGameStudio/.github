@@ -1,0 +1,53 @@
+name: Create Test Build
+
+on:
+  push:
+    branches:
+      - 'releases/**'
+
+jobs:
+  buildForAndroid:
+    name: Create test build for Android
+    runs-on: ubuntu-latest
+    steps:
+    
+    #CHECKOUT
+      - run: echo 'Checkout started'
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          lfs: true
+          
+    #CACHE
+      - run: echo 'Cache started'
+      - uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-Android
+          restore-keys: Library-
+         
+    #BUILD
+      - run: echo 'Build starting'
+      - uses: game-ci/unity-builder@v2
+        id: autoBuildStep
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          versioning: Semantic
+          targetPlatform: ${{ matrix.targetPlatform }}
+          buildName: AutoBuild-${{ github.event.repository.name }}-${{ matrix.targetPlatform }}
+          androidAppBundle: false
+          #androidKeystoreName: user.keystore
+          #androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          #androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          #androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          #androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+          
+    #UPLOAD
+      - run: echo 'Upload started'
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Build-${{ github.event.repository.name }}-${{ matrix.targetPlatform }}
+          path: build/${{ matrix.targetPlatform }}
