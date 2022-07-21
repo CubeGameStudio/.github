@@ -1,0 +1,88 @@
+name: Create Release Build - AAB
+
+on:
+  workflow_dispatch: {}
+  
+  #push:
+  #  branches:
+  #    - 'releases/release'
+
+jobs:
+  buildForAndroid:
+    name: Create release build for Android
+    runs-on: ubuntu-latest
+    steps:
+    
+    #CHECKOUT
+      - run: echo 'Checkout started'
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          lfs: true
+          
+    #CACHE
+      - run: echo 'Cache started'
+      - uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-Android
+          restore-keys: Library-
+         
+    #BUILD
+      - run: echo 'Build starting'
+      - uses: game-ci/unity-builder@v2.0.4
+        id: buildAndroid
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          #versioning: Semantic
+          targetPlatform: Android
+          buildName: AutoBuild-${{ github.event.repository.name }}-Android
+          androidAppBundle: true
+          androidKeystoreName: user.keystore
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+
+    ##UPLOAD DIAWI 
+    #  - run: echo 'Upload to diawi started'
+    #  - uses: rnkdsh/action-upload-diawi@v1.2.5
+    #    id: diawiUpload
+    #    with:
+    #        token: ${{ secrets.DIAWI_TOKEN }}
+    #        file: build/Android/AutoBuild-${{ github.event.repository.name }}-Android.aab
+
+    #UPLOAD
+      - run: echo 'Upload started'
+      - uses: actions/upload-artifact@v2
+        with:
+          name: AutoBuild-${{ github.event.repository.name }}-Android
+          path: build/Android
+          retention-days: 7
+
+      - run: echo 'Download started'
+      - uses: actions/download-artifact@v3
+        id: download
+        with:
+            name: AutoBuild-${{ github.event.repository.name }}-Android
+            path: download/${{ github.event.repository.name }}/Android
+
+      - name: echo 'Download started'
+        run: echo ${{steps.download.outputs.download-path}}
+
+    #SENDING
+      #- name: Send message to slack
+      #  id: slackMessage
+      #  uses: slackapi/slack-github-action@v1.19.0
+      #  with:
+      #      payload: |
+      #          {
+      #            "build_url": "${{ steps.diawiUpload.outputs['url'] }}",
+      #            "build_info": "This build can upload to store",
+      #            "game_name": "${{ github.event.repository.name }}"
+      #          }
+      #  env:
+      #      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
