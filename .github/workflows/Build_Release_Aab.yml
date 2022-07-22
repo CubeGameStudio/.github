@@ -3,9 +3,9 @@ name: Create Release Build - AAB
 on:
   workflow_dispatch: {}
   
-  #push:
-  #  branches:
-  #    - 'releases/release'
+  push:
+    branches:
+      - 'releases/publish-release'
 
 jobs:
   buildForAndroid:
@@ -63,15 +63,15 @@ jobs:
           path: build/Android
           retention-days: 7
 
-      - run: echo 'Download started'
-      - uses: actions/download-artifact@v3
-        id: download
-        with:
-            name: AutoBuild-${{ github.event.repository.name }}-Android
-            path: download/${{ github.event.repository.name }}/Android
+      #- run: echo 'Download started'
+      #- uses: actions/download-artifact@v3
+      #  id: download
+      #  with:
+      #      name: AutoBuild-${{ github.event.repository.name }}-Android
+      #      path: download/${{ github.event.repository.name }}/Android
 
-      - name: echo 'Download started'
-        run: echo ${{steps.download.outputs.download-path}}
+      #- name: echo 'Download started'
+      #  run: echo ${{steps.download.outputs.download-path}}
 
     #SENDING
       #- name: Send message to slack

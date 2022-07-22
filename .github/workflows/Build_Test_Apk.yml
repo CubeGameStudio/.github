@@ -3,9 +3,9 @@ name: Create Test Build - APK
 on:
   workflow_dispatch: {}
   
-  #push:
-  #  branches:
-  #    - 'releases/pre-release'
+  push:
+    branches:
+      - 'releases/test-release'
 
 jobs:
   buildForAndroid:
